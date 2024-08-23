@@ -17,4 +17,3 @@ run:
 	@docker run --user $(shell id -u):$(shell id -g) \
 	            -v $(ROOT)/share:/home/$(USERNAME)/share \
 	            -it --rm $(TAG_NAME)
-

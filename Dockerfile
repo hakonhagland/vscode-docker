@@ -16,23 +16,20 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a new user with sudo privileges
+# Arguments for user and group creation
 ARG HOST_UID
 ARG HOST_GID
 ARG USERNAME=dockeruser
 
 # Create user and group with matching UID and GID
-RUN if ! getent group $HOST_GID; then groupadd -g $HOST_GID $USERNAME; fi && \
-    if ! getent passwd $HOST_UID; then \
-      useradd -u ${HOST_UID} -g ${HOST_GID} -m ${USERNAME}; \
-    else \
-        existing_user=$(getent passwd $HOST_UID | cut -d: -f1) && \
-        usermod -l $USERNAME $existing_user && \
-        groupmod -n $USERNAME $(getent group $HOST_GID | cut -d: -f1); \
+RUN if ! getent group ${HOST_GID} >/dev/null; then groupadd -g ${HOST_GID} ${USERNAME}; fi && \
+    if ! id -u ${HOST_UID} >/dev/null 2>&1; then \
+      useradd -m -u ${HOST_UID} -g ${HOST_GID} -s /bin/bash ${USERNAME}; \
     fi && \
+    usermod -aG sudo ${USERNAME} && \
     echo "${USERNAME}:ubuntu" | chpasswd && \
-    adduser ${USERNAME} sudo && \
-    echo "${USERNAME} ALL=(ALL) ALL" >> /etc/sudoers;
+    echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
+    chmod 0440 /etc/sudoers.d/${USERNAME}
 
 # Switch to the new user
 USER $USERNAME
