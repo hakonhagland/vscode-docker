@@ -21,10 +21,16 @@ ARG HOST_UID
 ARG HOST_GID
 ARG USERNAME=dockeruser
 
-# Create user and group with matching UID and GID
+# Create or modify user and group with matching UID and GID
 RUN if ! getent group ${HOST_GID} >/dev/null; then groupadd -g ${HOST_GID} ${USERNAME}; fi && \
     if ! id -u ${HOST_UID} >/dev/null 2>&1; then \
-      useradd -m -u ${HOST_UID} -g ${HOST_GID} -s /bin/bash ${USERNAME}; \
+        useradd -m -u ${HOST_UID} -g ${HOST_GID} -s /bin/bash ${USERNAME}; \
+    else \
+        existing_user=$(getent passwd ${HOST_UID} | cut -d: -f1); \
+        if [ "$existing_user" != "$USERNAME" ]; then \
+            usermod -l ${USERNAME} -d /home/${USERNAME} -m $existing_user; \
+            groupmod -n ${USERNAME} $(getent group ${HOST_GID} | cut -d: -f1); \
+        fi; \
     fi && \
     usermod -aG sudo ${USERNAME} && \
     echo "${USERNAME}:ubuntu" | chpasswd && \
