@@ -46,6 +46,9 @@ RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Install xeyes for testing
+RUN apt-get update && apt-get install -y x11-apps
+
 # Switch back to the regular user
 USER $USERNAME
 

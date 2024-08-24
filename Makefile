@@ -1,6 +1,6 @@
 ROOT := $(shell pwd)
 
-.PHONY: build run
+.PHONY: build run run-vscode
 
 USERNAME := dockeruser
 TAG_NAME := ubuntu-vscode
@@ -19,12 +19,40 @@ run:
 	            -v $(ROOT)/share:/home/$(USERNAME)/share \
 	            -it --rm $(TAG_NAME)
 
+# NOTE: Running VSCode in Docker container requires X11 server to be running on host machine.
+#       If you are using Windows, you can use Xming or VcXsrv.
+# 	    If you are using macOS, you can use XQuartz.
+# NOTE: When running VS Code in a container, we need to disable the sandbox
+#       by passing the "--no-sandbox" flag.
+# TODO: For some reason, the "--verbose" flag is also needed to run VSCode in the container.
+#       This is a temporary workaround until a better solution is found.
 run-vscode:
 	@echo "Running Docker container with VSCode..."
-	@xhost +local:docker
-	@docker run --user $(shell id -u):$(shell id -g) \
-	            -v $(ROOT)/share:/home/$(USERNAME)/share \
-	            -v /tmp/.X11-unix:/tmp/.X11-unix \
-	            -e DISPLAY=$(DISPLAY) \
-	            -it --rm $(TAG_NAME) code /home/$(USERNAME)/share
-	@xhost -local:docker
+	@if command -v xhost >/dev/null 2>&1; then \
+	    mkdir -p $(ROOT)/share; \
+		xhost +; \
+		docker run --user $(shell id -u):$(shell id -g) \
+		           -v $(ROOT)/share:/home/$(USERNAME)/share \
+		           -v /tmp/.X11-unix:/tmp/.X11-unix \
+		           -e DISPLAY=$(DISPLAY) \
+		           -it --rm $(TAG_NAME) code --verbose --no-sandbox /home/$(USERNAME)/share > /dev/null 2>&1; \
+		xhost -; \
+	else \
+		echo "xhost command not found. Please ensure X11 is set up correctly."; \
+		exit 1; \
+	fi
+
+run-xeyes:
+	@echo "Running Docker container with xeyes..."
+	@if command -v xhost >/dev/null 2>&1; then \
+	    mkdir -p $(ROOT)/share; \
+		xhost +; \
+		docker run --user $(shell id -u):$(shell id -g) \
+		           -v /tmp/.X11-unix:/tmp/.X11-unix \
+		           -e DISPLAY=$(DISPLAY) \
+		           -it --rm $(TAG_NAME) xeyes; \
+		xhost -; \
+	else \
+		echo "xhost command not found. Please ensure X11 is set up correctly."; \
+		exit 1; \
+	fi
