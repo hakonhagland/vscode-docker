@@ -14,6 +14,17 @@ build:
 
 run:
 	@echo "Running Docker container..."
+	@mkdir -p $(ROOT)/share
 	@docker run --user $(shell id -u):$(shell id -g) \
 	            -v $(ROOT)/share:/home/$(USERNAME)/share \
 	            -it --rm $(TAG_NAME)
+
+run-vscode:
+	@echo "Running Docker container with VSCode..."
+	@xhost +local:docker
+	@docker run --user $(shell id -u):$(shell id -g) \
+	            -v $(ROOT)/share:/home/$(USERNAME)/share \
+	            -v /tmp/.X11-unix:/tmp/.X11-unix \
+	            -e DISPLAY=$(DISPLAY) \
+	            -it --rm $(TAG_NAME) code /home/$(USERNAME)/share
+	@xhost -local:docker

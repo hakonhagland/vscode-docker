@@ -37,16 +37,17 @@ RUN if ! getent group ${HOST_GID} >/dev/null; then groupadd -g ${HOST_GID} ${USE
     echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
     chmod 0440 /etc/sudoers.d/${USERNAME}
 
-# Switch to the new user
-USER $USERNAME
-
-# Install Visual Studio Code
+# Install Visual Studio Code as root
+USER root
 RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /usr/share/keyrings/packages.microsoft.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" | sudo tee /etc/apt/sources.list.d/vscode.list \
-    && sudo apt-get update \
-    && sudo apt-get install -y code \
-    && sudo apt-get clean \
+    && apt-get update \
+    && apt-get install -y code \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Switch back to the regular user
+USER $USERNAME
 
 # Set the working directory
 WORKDIR /home/$USERNAME
