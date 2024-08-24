@@ -30,13 +30,13 @@ run-vscode:
 	@echo "Running Docker container with VSCode..."
 	@if command -v xhost >/dev/null 2>&1; then \
 	    mkdir -p $(ROOT)/share; \
-		xhost +; \
+		xhost +local:docker ; \
 		docker run --user $(shell id -u):$(shell id -g) \
 		           -v $(ROOT)/share:/home/$(USERNAME)/share \
 		           -v /tmp/.X11-unix:/tmp/.X11-unix \
 		           -e DISPLAY=$(DISPLAY) \
 		           -it --rm $(TAG_NAME) code --verbose --no-sandbox /home/$(USERNAME)/share > /dev/null 2>&1; \
-		xhost -; \
+		xhost -local:docker; \
 	else \
 		echo "xhost command not found. Please ensure X11 is set up correctly."; \
 		exit 1; \
